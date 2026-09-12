@@ -4,7 +4,6 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "vercel dev",
     "build": "node --check app.js && node --check api/_adminInit.js && node --check api/_auth.js && node --check api/loadMemos.js && node --check api/addMemo.js && node --check api/deleteMemo.js && node --check api/gemini.js"
   },
   "dependencies": {

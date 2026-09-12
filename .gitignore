@@ -7,6 +7,7 @@
 
 # Vercel 배포 설정
 .vercel
+.vercel-dev*.log
 
 # 편집기·운영체제가 만드는 파일
 .vscode/
