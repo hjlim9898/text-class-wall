@@ -26,7 +26,10 @@ let nextId = 4;  // 새 메모에 붙일 번호
 // 메모를 읽어 옵니다.
 // 백엔드 1: 여기가 Firestore에서 가져오는 코드로 바뀝니다.
 //           순서는 orderBy("createdAt") 으로 맞춥니다.
-function loadMemos() {
+async function loadMemos() {
+  return fetch('/api/loadMemos')
+    .then(res => res.json());
+}
   return memos.slice().sort(function (a, b) {
     return a.createdAt - b.createdAt;
   });
@@ -34,7 +37,13 @@ function loadMemos() {
 
 // 메모를 새로 씁니다.
 // 백엔드 2: 여기에 "누가 썼는지"(uid)를 함께 저장하게 됩니다.
-function addMemo(text) {
+async function addMemo(text) {
+  await fetch('/api/addMemo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+}
   memos.push({
     id: nextId,
     text: text,
@@ -45,9 +54,9 @@ function addMemo(text) {
 
 // 메모를 지웁니다.
 // 백엔드 2: 지금은 누구든 남의 메모를 지울 수 있습니다. 이걸 막는 것이 과제입니다.
-function deleteMemo(id) {
-  memos = memos.filter(function (memo) {
-    return memo.id !== id;
+async function deleteMemo(id) {
+  await fetch(`/api/deleteMemo?id=${id}`, {
+    method: 'DELETE'
   });
 }
 
@@ -56,11 +65,12 @@ function deleteMemo(id) {
 // 화면 그리기
 // ===================================================
 
-function render() {
+async function render() {
   const wall = document.getElementById("wall");
   wall.innerHTML = "";
 
-  loadMemos().forEach(function (memo) {
+  const memos = await loadMemos();
+  memos.forEach(function (memo) {
     wall.appendChild(makeMemo(memo));
   });
 }
@@ -93,20 +103,20 @@ function makeMemo(memo) {
 
 const input = document.getElementById("input");
 
-input.onkeydown = function (e) {
+input.onkeydown = async function (e) {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
 
     const text = input.value.trim();
     if (text === "") return;
 
-    addMemo(text);
+    await addMemo(text);
     input.value = "";
-    render();
+    await render();
   }
 };
 
 
 // 첫 화면 그리기
-render();
+await render();
 input.focus();

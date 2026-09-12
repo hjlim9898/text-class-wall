@@ -1,0 +1,13 @@
+{
+  "name": "class-wall-starter",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo \"No build needed\""
+  },
+  "dependencies": {
+    "firebase-admin": "^12.5.0"
+  }
+}
