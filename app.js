@@ -1,3 +1,26 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1CAMpp6J3wMv78OsTeunoK4XUHbB7jQY",
+  authDomain: "class-wall-6abcc.firebaseapp.com",
+  projectId: "class-wall-6abcc",
+  storageBucket: "class-wall-6abcc.firebasestorage.app",
+  messagingSenderId: "578562174832",
+  appId: "1:578562174832:web:0a10dfeb835af02a2469b5"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const provider = new GoogleAuthProvider();
+let currentUser = null;
+
 // ===================================================
 // 우리 반 담벼락 - 시작점
 //
@@ -27,37 +50,39 @@ let nextId = 4;  // 새 메모에 붙일 번호
 // 백엔드 1: 여기가 Firestore에서 가져오는 코드로 바뀝니다.
 //           순서는 orderBy("createdAt") 으로 맞춥니다.
 async function loadMemos() {
-  return fetch('/api/loadMemos')
-    .then(res => res.json());
-}
-  return memos.slice().sort(function (a, b) {
-    return a.createdAt - b.createdAt;
-  });
+  const headers = {};
+  if (currentUser) headers.Authorization = `Bearer ${await currentUser.getIdToken()}`;
+  const response = await fetch('/api/loadMemos', { headers });
+  if (!response.ok) throw new Error('메모를 불러오지 못했습니다.');
+  return response.json();
 }
 
 // 메모를 새로 씁니다.
 // 백엔드 2: 여기에 "누가 썼는지"(uid)를 함께 저장하게 됩니다.
 async function addMemo(text) {
-  await fetch('/api/addMemo', {
+  if (!currentUser) throw new Error('로그인이 필요합니다.');
+  const token = await currentUser.getIdToken();
+  const response = await fetch('/api/addMemo', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
     body: JSON.stringify({ text })
   });
-}
-  memos.push({
-    id: nextId,
-    text: text,
-    createdAt: Date.now()
-  });
-  nextId = nextId + 1;
+  if (!response.ok) throw new Error('메모를 저장하지 못했습니다.');
 }
 
 // 메모를 지웁니다.
 // 백엔드 2: 지금은 누구든 남의 메모를 지울 수 있습니다. 이걸 막는 것이 과제입니다.
 async function deleteMemo(id) {
-  await fetch(`/api/deleteMemo?id=${id}`, {
-    method: 'DELETE'
+  if (!currentUser) throw new Error('로그인이 필요합니다.');
+  const token = await currentUser.getIdToken();
+  const response = await fetch(`/api/deleteMemo?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
   });
+  if (!response.ok) throw new Error('메모를 지우지 못했습니다.');
 }
 
 
@@ -80,13 +105,15 @@ function makeMemo(memo) {
   const div = document.createElement("div");
   div.className = "memo";
 
-  const del = document.createElement("button");
-  del.textContent = "×";
-  del.onclick = function () {
-    deleteMemo(memo.id);
-    render();
-  };
-  div.appendChild(del);
+  if (memo.canDelete) {
+    const del = document.createElement("button");
+    del.textContent = "×";
+    del.onclick = async function () {
+      await deleteMemo(memo.id);
+      await render();
+    };
+    div.appendChild(del);
+  }
 
   const span = document.createElement("span");
   span.textContent = memo.text;
@@ -102,6 +129,28 @@ function makeMemo(memo) {
 // ===================================================
 
 const input = document.getElementById("input");
+const userArea = document.getElementById("userArea");
+
+// 로그인 상태에 맞게 버튼과 메모 입력 칸을 바꿉니다.
+function showLoginState(user) {
+  userArea.innerHTML = "";
+  const button = document.createElement("button");
+
+  if (user) {
+    userArea.append("구글 로그인 중 ");
+    button.textContent = "로그아웃";
+    button.onclick = () => signOut(auth);
+    input.disabled = false;
+    input.placeholder = "메모를 쓰고 엔터";
+  } else {
+    button.textContent = "Google로 로그인";
+    button.onclick = () => signInWithPopup(auth, provider);
+    input.disabled = true;
+    input.placeholder = "로그인하면 메모를 쓸 수 있습니다";
+  }
+
+  userArea.appendChild(button);
+}
 
 input.onkeydown = async function (e) {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -117,6 +166,10 @@ input.onkeydown = async function (e) {
 };
 
 
-// 첫 화면 그리기
-await render();
-input.focus();
+// 로그인 확인이 끝나면 첫 화면을 그립니다.
+onAuthStateChanged(auth, async function (user) {
+  currentUser = user;
+  showLoginState(user);
+  await render();
+  if (user) input.focus();
+});

@@ -57,50 +57,16 @@
       float: right;
     }
   </style>
-  <!-- Firebase SDK (modular) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-    const firebaseConfig = {
-      apiKey: "AIzaSyC1CAMpp6J3wMv78OsTeunoK4XUHbB7jQY",
-      authDomain: "class-wall-6abcc.firebaseapp.com",
-      projectId: "class-wall-6abcc",
-      storageBucket: "class-wall-6abcc.firebasestorage.app",
-      messagingSenderId: "578562174832",
-      appId: "1:578562174832:web:0a10dfeb835af02a2469b5"
-    };
-    const app = initializeApp(firebaseConfig);
-  </script>
 </head>
 
 <body>
 
   <h1>우리 반 담벼락</h1>
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyC1CAMpp6J3wMv78OsTeunoK4XUHbB7jQY",
-      authDomain: "class-wall-6abcc.firebaseapp.com",
-      projectId: "class-wall-6abcc",
-      storageBucket: "class-wall-6abcc.firebasestorage.app",
-      messagingSenderId: "578562174832",
-      appId: "1:578562174832:web:0a10dfeb835af02a2469b5"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-  </script>
-
-
   <!-- 백엔드 2 시간에 여기에 로그인 버튼과 내 이름이 들어옵니다 -->
-  <div id="userArea">아직 로그인 기능이 없습니다.</div>
+  <div id="userArea">로그인 상태를 확인하고 있습니다.</div>
 
   <div id="writer">
-    <textarea id="input" rows="3" placeholder="메모를 쓰고 엔터"></textarea>
+    <textarea id="input" rows="3" placeholder="로그인하면 메모를 쓸 수 있습니다" disabled></textarea>
   </div>
 
   <!-- 메모는 app.js가 그립니다 -->
