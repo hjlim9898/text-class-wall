@@ -13,10 +13,23 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "teacher";
     }
 
-    function validMemo() {
-      return request.resource.data.text is string
-        && request.resource.data.text.size() >= 5
+    function validNewMemo() {
+      return request.resource.data.keys().hasOnly(["text", "createdAt", "uid"])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 50
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt == request.time
         && request.resource.data.uid is string;
+    }
+
+    function validUpdatedMemo() {
+      return request.resource.data.keys().hasOnly(["text", "createdAt", "uid"])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 50
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.uid == resource.data.uid;
     }
 
     match /memos/{docId} {
@@ -25,11 +38,11 @@ service cloud.firestore {
 
       // 학생은 자신의 uid로만 메모를 만들 수 있습니다.
       // 교사는 모든 메모를 만들 수 있습니다.
-      allow create: if validMemo()
+      allow create: if validNewMemo()
         && (isTeacher() || request.resource.data.uid == request.auth.uid);
 
       // 수정과 삭제는 교사만 할 수 있습니다.
-      allow update: if isTeacher() && validMemo();
+      allow update: if isTeacher() && validUpdatedMemo();
       allow delete: if isTeacher();
     }
 
