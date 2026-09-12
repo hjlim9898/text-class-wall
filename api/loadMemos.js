@@ -1,10 +1,12 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { initAdmin } from "./_adminInit.js";
-import { getUser } from "./_auth.js";
+import { getRole, requireUser } from "./_auth.js";
 
 export default async function handler(req, res) {
   await initAdmin();
-  const user = await getUser(req);
+  const user = await requireUser(req, res);
+  if (!user) return;
+  const role = await getRole(user);
   const db = getFirestore();
   const snapshot = await db.collection('memos').orderBy('createdAt').get();
   const memos = [];
@@ -14,7 +16,7 @@ export default async function handler(req, res) {
       id: doc.id,
       text: data.text,
       createdAt: data.createdAt,
-      canDelete: Boolean(user && data.uid === user.uid),
+      canDelete: role === "teacher",
     });
   });
   res.status(200).json(memos);

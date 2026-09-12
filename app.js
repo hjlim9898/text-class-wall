@@ -50,8 +50,10 @@ let nextId = 4;  // 새 메모에 붙일 번호
 // 백엔드 1: 여기가 Firestore에서 가져오는 코드로 바뀝니다.
 //           순서는 orderBy("createdAt") 으로 맞춥니다.
 async function loadMemos() {
-  const headers = {};
-  if (currentUser) headers.Authorization = `Bearer ${await currentUser.getIdToken()}`;
+  if (!currentUser) throw new Error('로그인이 필요합니다.');
+  const headers = {
+    Authorization: `Bearer ${await currentUser.getIdToken()}`
+  };
   const response = await fetch('/api/loadMemos', { headers });
   if (!response.ok) throw new Error('메모를 불러오지 못했습니다.');
   return response.json();
@@ -170,6 +172,10 @@ input.onkeydown = async function (e) {
 onAuthStateChanged(auth, async function (user) {
   currentUser = user;
   showLoginState(user);
-  await render();
-  if (user) input.focus();
+  if (user) {
+    await render();
+    input.focus();
+  } else {
+    document.getElementById("wall").innerHTML = "";
+  }
 });

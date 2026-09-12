@@ -1,18 +1,44 @@
-// Firestore security rules for class-wall project
-// 메모를 저장할 때, 텍스트 길이가 5글자 이상이어야 합니다.
-// 읽기는 모두 허용합니다.
+// 우리 반 담벼락의 역할별 Firestore 보안 규칙입니다.
+// users/{uid} 문서의 role은 teacher 또는 student를 사용합니다.
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // memos 컬렉션에 대한 규칙
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isTeacher() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "teacher";
+    }
+
+    function validMemo() {
+      return request.resource.data.text is string
+        && request.resource.data.text.size() >= 5
+        && request.resource.data.uid is string;
+    }
+
     match /memos/{docId} {
-      // 읽기 허용
-      allow read: if true;
-      // 생성 및 업데이트는 텍스트 길이가 5이상일 때만 허용
-      allow create, update: if request.resource.data.text.size() >= 5;
-      // 삭제는 현재 정책에 따라 허용 (필요 시 제한 가능)
-      allow delete: if true;
+      // 로그인한 교사와 학생은 담벼락을 읽을 수 있습니다.
+      allow read: if signedIn();
+
+      // 학생은 자신의 uid로만 메모를 만들 수 있습니다.
+      // 교사는 모든 메모를 만들 수 있습니다.
+      allow create: if validMemo()
+        && (isTeacher() || request.resource.data.uid == request.auth.uid);
+
+      // 수정과 삭제는 교사만 할 수 있습니다.
+      allow update: if isTeacher() && validMemo();
+      allow delete: if isTeacher();
+    }
+
+    match /users/{userId} {
+      // 사용자는 자신의 역할을 확인하고, 교사는 전체 역할을 확인할 수 있습니다.
+      allow read: if signedIn() && (request.auth.uid == userId || isTeacher());
+
+      // 역할 지정은 Firebase Console 또는 신뢰할 수 있는 서버에서만 합니다.
+      allow write: if false;
     }
   }
 }
