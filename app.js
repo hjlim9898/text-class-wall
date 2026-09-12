@@ -1,11 +1,11 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithPopup,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+} from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -17,7 +17,7 @@ import {
   orderBy,
   query,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1CAMpp6J3wMv78OsTeunoK4XUHbB7jQY",
@@ -141,39 +141,46 @@ function makeMemo(memo) {
 // ===================================================
 
 const input = document.getElementById("input");
-const userArea = document.getElementById("userArea");
+const loginStatus = document.getElementById("loginStatus");
+const loginButton = document.getElementById("loginButton");
+const saveButton = document.getElementById("saveButton");
 
 // 로그인 상태에 맞게 버튼과 메모 입력 칸을 바꿉니다.
 function showLoginState(user) {
-  userArea.innerHTML = "";
-  const button = document.createElement("button");
-
   if (user) {
-    userArea.append("구글 로그인 중 ");
-    button.textContent = "로그아웃";
-    button.onclick = () => signOut(auth);
+    loginStatus.textContent = currentRole === "teacher" ? "교사로 로그인했습니다." : "학생으로 로그인했습니다.";
+    loginButton.textContent = "로그아웃";
+    loginButton.onclick = () => signOut(auth);
     input.disabled = false;
+    saveButton.disabled = false;
     input.placeholder = "메모를 쓰고 엔터";
   } else {
-    button.textContent = "Google로 로그인";
-    button.onclick = () => signInWithPopup(auth, provider);
+    loginStatus.textContent = "로그인이 필요합니다.";
+    loginButton.textContent = "Google로 로그인";
+    loginButton.onclick = () => signInWithPopup(auth, provider);
     input.disabled = true;
+    saveButton.disabled = true;
     input.placeholder = "로그인하면 메모를 쓸 수 있습니다";
   }
-
-  userArea.appendChild(button);
 }
+
+// 입력한 게시글을 저장하고 담벼락을 다시 그립니다.
+async function saveMemo() {
+  const text = input.value.trim();
+  if (text === "") return;
+
+  await addMemo(text);
+  input.value = "";
+  await render();
+}
+
+saveButton.onclick = saveMemo;
 
 input.onkeydown = async function (e) {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
 
-    const text = input.value.trim();
-    if (text === "") return;
-
-    await addMemo(text);
-    input.value = "";
-    await render();
+    await saveMemo();
   }
 };
 

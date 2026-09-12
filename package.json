@@ -4,9 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "node --check app.js && node --check api/_adminInit.js && node --check api/_auth.js && node --check api/loadMemos.js && node --check api/addMemo.js && node --check api/deleteMemo.js && node --check api/gemini.js"
+    "build": "node --check app.js && node --check api/_adminInit.js && node --check api/_auth.js && node --check api/loadMemos.js && node --check api/addMemo.js && node --check api/deleteMemo.js && node --check api/gemini.js && esbuild ./app.js --bundle --format=esm --minify --outfile=app.bundle.js"
   },
   "dependencies": {
+    "firebase": "^12.19.0",
     "firebase-admin": "^12.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }
