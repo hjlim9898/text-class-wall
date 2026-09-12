@@ -1,27 +1,62 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>우리 반 담벼락</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📌</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📌</text></svg>">
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    h1 { font-size: 24px; }
-    .notice { background: #ffe9e9; padding: 10px; }
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    .notice {
+      background: #ffe9e9;
+      padding: 10px;
+    }
 
     /* 로그인 버튼이 들어올 자리 */
-    #userArea { margin: 10px 0; color: #666; }
+    #userArea {
+      margin: 10px 0;
+      color: #666;
+    }
 
     /* 메모 쓰는 칸 */
-    #writer { margin: 16px 0; }
-    #writer textarea { width: 400px; font-size: 16px; }
+    #writer {
+      margin: 16px 0;
+    }
+
+    #writer textarea {
+      width: 400px;
+      font-size: 16px;
+    }
 
     /* 메모가 붙는 담벼락 */
-    #wall { display: flex; flex-wrap: wrap; gap: 10px; }
-    .memo { border: 1px solid #ddd; background: #fffde7; padding: 10px; width: 200px; font-size: 15px; }
-    .memo button { float: right; }
-</style>
+    #wall {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .memo {
+      border: 1px solid #ddd;
+      background: #fffde7;
+      padding: 10px;
+      width: 200px;
+      font-size: 15px;
+    }
+
+    .memo button {
+      float: right;
+    }
+  </style>
   <!-- Firebase SDK (modular) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -36,10 +71,29 @@
     const app = initializeApp(firebaseConfig);
   </script>
 </head>
+
 <body>
 
   <h1>우리 반 담벼락</h1>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
 
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyC1CAMpp6J3wMv78OsTeunoK4XUHbB7jQY",
+      authDomain: "class-wall-6abcc.firebaseapp.com",
+      projectId: "class-wall-6abcc",
+      storageBucket: "class-wall-6abcc.firebasestorage.app",
+      messagingSenderId: "578562174832",
+      appId: "1:578562174832:web:0a10dfeb835af02a2469b5"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+  </script>
 
 
   <!-- 백엔드 2 시간에 여기에 로그인 버튼과 내 이름이 들어옵니다 -->
@@ -58,4 +112,5 @@
   -->
   <script type="module" src="app.js"></script>
 </body>
+
 </html>
