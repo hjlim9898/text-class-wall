@@ -6,6 +6,18 @@ import {
   signInWithPopup,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  orderBy,
+  query,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1CAMpp6J3wMv78OsTeunoK4XUHbB7jQY",
@@ -18,8 +30,10 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
 const provider = new GoogleAuthProvider();
 let currentUser = null;
+let currentRole = "student";
 
 // ===================================================
 // 우리 반 담벼락 - 시작점
@@ -51,40 +65,36 @@ let nextId = 4;  // 새 메모에 붙일 번호
 //           순서는 orderBy("createdAt") 으로 맞춥니다.
 async function loadMemos() {
   if (!currentUser) throw new Error('로그인이 필요합니다.');
-  const headers = {
-    Authorization: `Bearer ${await currentUser.getIdToken()}`
-  };
-  const response = await fetch('/api/loadMemos', { headers });
-  if (!response.ok) throw new Error('메모를 불러오지 못했습니다.');
-  return response.json();
+  const snapshot = await getDocs(query(collection(db, "memos"), orderBy("createdAt")));
+  return snapshot.docs.map(function (memoDoc) {
+    const data = memoDoc.data();
+    return {
+      id: memoDoc.id,
+      text: data.text,
+      createdAt: data.createdAt,
+      canDelete: currentRole === "teacher"
+    };
+  });
 }
 
 // 메모를 새로 씁니다.
 // 백엔드 2: 여기에 "누가 썼는지"(uid)를 함께 저장하게 됩니다.
 async function addMemo(text) {
   if (!currentUser) throw new Error('로그인이 필요합니다.');
-  const token = await currentUser.getIdToken();
-  const response = await fetch('/api/addMemo', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ text })
+  await addDoc(collection(db, "memos"), {
+    text,
+    createdAt: serverTimestamp(),
+    uid: currentUser.uid
   });
-  if (!response.ok) throw new Error('메모를 저장하지 못했습니다.');
 }
 
 // 메모를 지웁니다.
 // 백엔드 2: 지금은 누구든 남의 메모를 지울 수 있습니다. 이걸 막는 것이 과제입니다.
 async function deleteMemo(id) {
-  if (!currentUser) throw new Error('로그인이 필요합니다.');
-  const token = await currentUser.getIdToken();
-  const response = await fetch(`/api/deleteMemo?id=${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!response.ok) throw new Error('메모를 지우지 못했습니다.');
+  if (!currentUser || currentRole !== "teacher") {
+    throw new Error('교사만 메모를 지울 수 있습니다.');
+  }
+  await deleteDoc(doc(db, "memos", id));
 }
 
 
@@ -171,6 +181,13 @@ input.onkeydown = async function (e) {
 // 로그인 확인이 끝나면 첫 화면을 그립니다.
 onAuthStateChanged(auth, async function (user) {
   currentUser = user;
+  currentRole = "student";
+  if (user) {
+    const roleDoc = await getDoc(doc(db, "users", user.uid));
+    if (roleDoc.exists() && roleDoc.data().role === "teacher") {
+      currentRole = "teacher";
+    }
+  }
   showLoginState(user);
   if (user) {
     await render();
